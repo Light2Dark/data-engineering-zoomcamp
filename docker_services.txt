@@ -1,0 +1,46 @@
+docker run -it \
+  -e POSTGRES_USER="root" \
+  -e POSTGRES_PASSWORD="root" \
+  -e POSTGRES_DB="ny_taxi" \
+  -v $(pwd)/ny_taxi_postgres_data:/var/lib/postgresql/data \
+  -p 5432:5432 \
+  --user 1000:1000 \
+  --network pg-network \
+  --name ny-taxi-postgres \
+  postgres:15
+
+  --user $(id -u):$(id -g)
+
+
+docker run -it \
+  -e PGADMIN_DEFAULT_EMAIL="admin@admin.com" \
+  -e PGADMIN_DEFAULT_PASSWORD="root" \
+  -p 8080:80 \
+  --network pg-network \
+  --name ny-taxi-pgadmin \
+  dpage/pgadmin4
+
+
+docker network create pg-network
+
+
+python ingest_data.py \
+  --user root \
+  --pwd root \
+  --host localhost \
+  --port 5432 \
+  --db ny_taxi \
+  --table yellow_taxi_data
+
+docker build -t taxi_ingest:v1.0 .
+
+# talk to our pg db
+docker run -it \
+  --network pg-network \
+  taxi_ingest:v1.0 \
+    --user root \
+    --pwd root \
+    --host ny-taxi-postgres \
+    --port 5432 \
+    --db ny_taxi \
+    --table yellow_taxi_data
