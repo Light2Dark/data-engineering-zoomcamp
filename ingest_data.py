@@ -1,5 +1,6 @@
 import pandas as pd
 from sqlalchemy import create_engine
+from sqlalchemy.engine import Connection
 from time import time
 import argparse
 # import os
@@ -29,16 +30,7 @@ def ingest(user: str, pwd: str, host: str, db: str, table_name: str, port: int, 
             time_end = time()
             print(f"inserting a chunk..took {time_end-time_start:.2f}s")
 
-
-def ingest_zones(user: str, pwd: str, host: str, db: str, table_name: str, port: int, url: str = None):
-    df = pd.read_csv("taxi_zone_lookup.csv")
-    engine = create_engine(f"postgresql://{user}:{pwd}@{host}:{port}/{db}")
-    engine.connect()
-    df.to_sql(name=table_name, con=engine, if_exists = 'replace')
-    
- 
-
-if __name__ == "__main__":
+def ingest_exec():
     parser = argparse.ArgumentParser(description='Creates a table in postgresql database and populates it with data from csv file')
     
     parser.add_argument('--user', type=str, help='username for postgresql database')
@@ -51,5 +43,26 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     ingest(args.user, args.pwd, args.host, args.db, args.table_name, args.port, args.file_path)
+
+
+def ingest_zones(user: str, pwd: str, host: str, db: str, table_name: str, port: int, url: str = None):
+    df = pd.read_csv("taxi_zone_lookup.csv")
+    engine = create_engine(f"postgresql://{user}:{pwd}@{host}:{port}/{db}")
+    engine.connect()
+    df.to_sql(name=table_name, con=engine, if_exists = 'replace')
     
-    # ingest_zones("root", "root", "localhost", "ny_taxi", "taxi_zones", "5432")
+def connect_to_db(user: str, pwd: str, host: str, db: str, port: int) -> Connection:
+    engine = create_engine(f"postgresql://{user}:{pwd}@{host}:{port}/{db}")
+    return engine.connect()
+    
+def query_db(db_connection: Connection, query: str) -> str:
+    cursorResult = db_connection.execute(query)
+    result = cursorResult.fetchall()
+    print(f"Query result {result}")
+    
+ 
+
+if __name__ == "__main__":    
+    connection = connect_to_db("root", "root", "localhost", "ny_taxi", "5432")
+    query = "SELECT COUNT(1) FROM yellow_taxi_data"
+    query_db(connection, query)

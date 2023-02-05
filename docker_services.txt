@@ -30,8 +30,8 @@ python ingest_data.py \
   --host localhost \
   --port 5432 \
   --db ny_taxi \
-  --table green_taxi_data \
-  --file_path files/green_tripdata_2019-01.csv
+  --table yellow_taxi_data \
+  --file_path files/yellow_tripdata_2021-07.csv
 
 docker build -t taxi_ingest:v1.0 .
 

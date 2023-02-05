@@ -1,0 +1,63 @@
+###
+### A complete description of a Prefect Deployment for flow 'parent_flow'
+###
+name: Parametrized ETL
+description: Will run the main flow multiple times to collect data from diff months,
+  colours, years etc.
+version: b35225eb6a9dbcf3992590adfead16a4
+# The work queue that will handle this deployment's runs
+work_queue_name: default
+tags: []
+parameters: {"months": [6,7], "colours": ["yellow"], "years": [2021]}
+schedule: null
+infra_overrides: {}
+infrastructure:
+  type: process
+  env: {}
+  labels: {}
+  name: null
+  command: null
+  stream_output: true
+  working_dir: null
+  block_type_slug: process
+  _block_type_slug: process
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: parent_flow
+manifest_path: null
+storage: null
+path: /home/shahmir/dev/data_eng/week2
+entrypoint: etl_web_to_gcs.py:etl_parent_flow
+parameter_openapi_schema:
+  title: Parameters
+  type: object
+  properties:
+    months:
+      title: months
+      default:
+      - 6
+      - 7
+      position: 0
+      type: array
+      items:
+        type: integer
+    colours:
+      title: colours
+      default:
+      - yellow
+      position: 1
+      type: array
+      items:
+        type: string
+    years:
+      title: years
+      default:
+      - 2021
+      position: 2
+      type: array
+      items:
+        type: integer
+  required: null
+  definitions: null

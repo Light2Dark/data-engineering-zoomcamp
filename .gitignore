@@ -4,3 +4,6 @@ venv
 ny_taxi_postgres_data
 *.env
 data-eng-first.json
+files
+*/data
+*/__pycache__
