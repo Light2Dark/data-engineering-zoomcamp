@@ -1,4 +1,3 @@
-from pathlib import Path
 import pandas as pd
 from prefect import flow, task
 from prefect.tasks import task_input_hash
@@ -18,7 +17,7 @@ def etl_web_to_gcs(month: int, colour: str, year: int):
   dataset_url = f"https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{colour}/{filepath}.csv.gz"
   
   df = extract(dataset_url)
-  df_transformed = transform(df)
+  df_transformed = transform(df, colour)
   write_local(df_transformed, filepath)
   write_gcs(df_transformed, filepath)
   
@@ -31,10 +30,17 @@ def extract(url: str) -> pd.DataFrame:
   return pd.read_csv(url)
 
 @task(name="transform_data", log_prints=True, tags="transform")
-def transform(df: pd.DataFrame) -> pd.DataFrame:
+def transform(df: pd.DataFrame, colour: str) -> pd.DataFrame:
   """Fix dtype issues, return dataframe"""
-  df.tpep_pickup_datetime = pd.to_datetime(df.tpep_pickup_datetime)
-  df.tpep_dropoff_datetime = pd.to_datetime(df.tpep_dropoff_datetime)
+  
+  if colour == "green":
+    datetime_cols = ["lpep_pickup_datetime", "lpep_dropoff_datetime"]
+  elif colour == "yellow":
+    datetime_cols = ["tpep_pickup_datetime", "tpep_dropoff_datetime"]
+    
+  for col in datetime_cols:
+    df[col] = pd.to_datetime(df[col])
+  
   print(df.head(5))
   print(f"columns: {df.columns}")
   print(f"rows: {len(df)}")
@@ -44,15 +50,15 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
 def write_local(df: pd.DataFrame, filepath: str):
   """Write dataframe out locally as Parquet file"""
   print(f"saving to local file: {filepath}")
-  df.to_parquet(f"./data/{filepath}.parquet", index=False)
+  df.to_parquet(f"./week2/data/{filepath}.parquet", index=False)
   
 # cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1)
 @task(name="write_gcs", log_prints=True, tags="load_gcs", retries=3)
 def write_gcs(df: pd.DataFrame, filepath: str):
   gcp_cloud_storage_bucket_block = GcsBucket.load("taxi-gcp")
-  path_uploaded_to = gcp_cloud_storage_bucket_block.upload_from_path(from_path=f"./data/{filepath}.parquet", to_path=filepath)
+  path_uploaded_to = gcp_cloud_storage_bucket_block.upload_from_path(from_path=f"./week2/data/{filepath}.parquet", to_path=filepath)
   print(f"Uploaded to {path_uploaded_to}")
   
   
 if __name__ == "__main__":
-  etl_parent_flow()
+  etl_parent_flow(months=[3], colours=["yellow"], years=[2019])

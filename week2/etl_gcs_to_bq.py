@@ -6,18 +6,20 @@ from prefect_gcp import GcpCredentials
 from prefect_gcp.cloud_storage import GcsBucket
 from datetime import timedelta
 
+@flow(name="parent flow", log_prints=True)
+def etl_parent_flow(months: list[int] = [6,7], colour: str = "yellow", year: int = 2021):
+  """Will run the main flow multiple times to upload data to BQ for diff months in a year and colour"""
+  for month in months:
+    etl_gcs_to_bq(month, colour, year)
+
 @flow(name="main gcs to bq flow", log_prints=True)
-def etl_gcs_to_bq():
+def etl_gcs_to_bq(month: int, colour: str, year: int):
   """Main flow to upload data from GCS to BigQuery"""
-  colour = "yellow"
-  month = 7
-  year = 2021
-  
   path = extract_from_gcs(colour, year, month)
-  df = transform_from_gcs(path)
-  load_to_bq(df, "taxi_data.yellow")
+  # df = transform_from_gcs(path)
+  # load_to_bq(df, "taxi_data.yellow")
   
-@task(name="extract_from_gcs", retries=3, log_prints=True, tags="extract_gcs", cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1))
+@task(name="extract_from_gcs", retries=3, log_prints=True, tags="extract_gcs")
 def extract_from_gcs(colour: str, year: int, month: int) -> str:
   """Download trip data from GCS bucket to local machine, returns path where file is saved"""
   gcs_path = f"{colour}_tripdata_{year}-{month:02d}.parquet"
@@ -32,9 +34,10 @@ def extract_from_gcs(colour: str, year: int, month: int) -> str:
 def transform_from_gcs(path: str) -> pd.DataFrame:
   """Data cleaning, returns dataframe"""
   df = pd.read_parquet(path)
-  print(f"Pre-transform missing passenger count: {df['passenger_count'].isna().sum()}")
-  df.dropna(subset=["passenger_count"], inplace=True) # or fillna(0)
-  print(f"Post-transform missing passenger count: {df['passenger_count'].isna().sum()}")
+  print("Dataset rows:", len(df))
+  # print(f"Pre-transform missing passenger count: {df['passenger_count'].isna().sum()}")
+  # df.dropna(subset=["passenger_count"], inplace=True) # or fillna(0)
+  # print(f"Post-transform missing passenger count: {df['passenger_count'].isna().sum()}")
   return df
 
 @task(name="load_to_bq", log_prints=True, tags="load_bq")
@@ -50,4 +53,4 @@ def load_to_bq(df: pd.DataFrame, to_path_upload: str):
   )
 
 if __name__ == "__main__":
-  etl_gcs_to_bq()
+  etl_parent_flow(months=[2,3], colour="yellow", year=2019)
