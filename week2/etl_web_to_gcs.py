@@ -19,7 +19,7 @@ def etl_web_to_gcs(month: int, colour: str, year: int):
   df = extract(dataset_url)
   df_transformed = transform(df, colour)
   write_local(df_transformed, filepath)
-  write_gcs(df_transformed, filepath)
+  write_gcs(filepath)
   
 # cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1) for some reason does not work w Docker
 @task(name="extract_data", retries=3, log_prints=True, tags="extract")
@@ -54,11 +54,24 @@ def write_local(df: pd.DataFrame, filepath: str):
   
 # cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1)
 @task(name="write_gcs", log_prints=True, tags="load_gcs", retries=3)
-def write_gcs(df: pd.DataFrame, filepath: str):
+def write_gcs(filepath: str):
   gcp_cloud_storage_bucket_block = GcsBucket.load("taxi-gcp")
   path_uploaded_to = gcp_cloud_storage_bucket_block.upload_from_path(from_path=f"./week2/data/{filepath}.parquet", to_path=filepath)
   print(f"Uploaded to {path_uploaded_to}")
   
+@flow(name="etl_large", log_prints=True)
+def etl_large(url: str, filepath: str, colour: str):
+  filename = "yellow_tripdata_2019-03"
+  df = pd.read_csv(url, nrows=10)
+  df.head(0).to_parquet(filepath, index=False, engine="fastparquet")
+  
+  df_iter = pd.read_csv(url, iterator=True, chunksize=100000)
+  while (df := next(df_iter, None)) is not None:
+    df.to_parquet(filepath, index=False, engine="fastparquet", append=True)
+  print(f"locally downloaded {filename} and saved it as parquet")
+  
+  write_gcs(filename)
   
 if __name__ == "__main__":
-  etl_parent_flow(months=[3], colours=["yellow"], years=[2019])
+  # etl_parent_flow(months=[4], colours=["green"], years=[2019])
+  etl_large("https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2019-03.csv.gz", "./week2/data/yellow_tripdata_2019-03.parquet", "yellow")

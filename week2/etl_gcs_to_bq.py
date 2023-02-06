@@ -5,6 +5,7 @@ from prefect.tasks import task_input_hash
 from prefect_gcp import GcpCredentials
 from prefect_gcp.cloud_storage import GcsBucket
 from datetime import timedelta
+import pyarrow.parquet as pq
 
 @flow(name="parent flow", log_prints=True)
 def etl_parent_flow(months: list[int] = [6,7], colour: str = "yellow", year: int = 2021):
@@ -16,8 +17,8 @@ def etl_parent_flow(months: list[int] = [6,7], colour: str = "yellow", year: int
 def etl_gcs_to_bq(month: int, colour: str, year: int):
   """Main flow to upload data from GCS to BigQuery"""
   path = extract_from_gcs(colour, year, month)
-  # df = transform_from_gcs(path)
-  # load_to_bq(df, "taxi_data.yellow")
+  df = transform_from_gcs(path)
+  load_to_bq(df, f"taxi_data.{colour}")
   
 @task(name="extract_from_gcs", retries=3, log_prints=True, tags="extract_gcs")
 def extract_from_gcs(colour: str, year: int, month: int) -> str:
@@ -25,7 +26,7 @@ def extract_from_gcs(colour: str, year: int, month: int) -> str:
   gcs_path = f"{colour}_tripdata_{year}-{month:02d}.parquet"
   gcs_block: GcsBucket = GcsBucket.load("taxi-gcp")
     
-  save_path = f"./data/{gcs_path}"
+  save_path = f"./week2/data/{gcs_path}"
   gcs_block.get_directory(from_path=gcs_path, local_path=save_path)
   print(f"saved file in {save_path}")
   return save_path
@@ -51,6 +52,14 @@ def load_to_bq(df: pd.DataFrame, to_path_upload: str):
     chunksize=100_000,
     if_exists="append"
   )
+  
+@flow(name="gcs_to_bq_large", log_prints=True)
+def etl_gcs_to_bq_large():
+  for month in [2,3]:
+    # path = extract_from_gcs("yellow", 2019, month)
+    parquet_file = pq.ParquetFile(f"./week2/data/yellow_tripdata_2019-{month:02d}.parquet")
+    print("Dataset rows:", parquet_file.metadata.num_rows)
 
 if __name__ == "__main__":
   etl_parent_flow(months=[2,3], colour="yellow", year=2019)
+  # etl_gcs_to_bq_large()
