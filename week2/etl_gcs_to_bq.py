@@ -36,9 +36,9 @@ def transform_from_gcs(path: str) -> pd.DataFrame:
   """Data cleaning, returns dataframe"""
   df = pd.read_parquet(path)
   print("Dataset rows:", len(df))
-  # print(f"Pre-transform missing passenger count: {df['passenger_count'].isna().sum()}")
-  # df.dropna(subset=["passenger_count"], inplace=True) # or fillna(0)
-  # print(f"Post-transform missing passenger count: {df['passenger_count'].isna().sum()}")
+  print(f"Pre-transform missing passenger count: {df['passenger_count'].isna().sum()}")
+  df.dropna(subset=["passenger_count"], inplace=True) # or fillna(0)
+  print(f"Post-transform missing passenger count: {df['passenger_count'].isna().sum()}")
   return df
 
 @task(name="load_to_bq", log_prints=True, tags="load_bq")

@@ -1,0 +1,74 @@
+###
+### A complete description of a Prefect Deployment for flow 'parent_flow'
+###
+name: github-flow
+description: Will run the main flow multiple times to collect data from diff months,
+  colours, years etc.
+version: 6999f71f9b36ac325cb924b262558b5e
+# The work queue that will handle this deployment's runs
+work_queue_name: test
+tags: []
+parameters: {}
+schedule: null
+infra_overrides: {}
+
+###
+### DO NOT EDIT BELOW THIS LINE
+###
+flow_name: parent_flow
+manifest_path: null
+infrastructure:
+  type: process
+  env: {}
+  labels: {}
+  name: null
+  command: null
+  stream_output: true
+  working_dir: null
+  _block_document_id: bf87c6e4-ecad-4b22-af3c-3c7cbaab7408
+  _block_document_name: anonymous-571daff0-5a90-44f7-80ee-f7125561ee8a
+  _is_anonymous: true
+  block_type_slug: process
+  _block_type_slug: process
+storage:
+  repository: https://github.com/Light2Dark/data-engineering-zoomcamp
+  reference: null
+  access_token: null
+  _block_document_id: 71238f57-ac1c-45a4-8f89-2705ba5c192a
+  _block_document_name: dataeng-week2
+  _is_anonymous: false
+  block_type_slug: github
+  _block_type_slug: github
+path: ''
+entrypoint: week2/etl_web_to_gcs.py:etl_parent_flow
+parameter_openapi_schema:
+  title: Parameters
+  type: object
+  properties:
+    months:
+      title: months
+      default:
+      - 6
+      - 7
+      position: 0
+      type: array
+      items:
+        type: integer
+    colours:
+      title: colours
+      default:
+      - yellow
+      position: 1
+      type: array
+      items:
+        type: string
+    years:
+      title: years
+      default:
+      - 2021
+      position: 2
+      type: array
+      items:
+        type: integer
+  required: null
+  definitions: null
