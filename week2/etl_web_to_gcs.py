@@ -50,13 +50,13 @@ def transform(df: pd.DataFrame, colour: str) -> pd.DataFrame:
 def write_local(df: pd.DataFrame, filepath: str):
   """Write dataframe out locally as Parquet file"""
   print(f"saving to local file: {filepath}")
-  df.to_parquet(f"./week2/data/{filepath}.parquet", index=False)
+  df.to_parquet(f"./week2/data_github/{filepath}.parquet", index=False)  # change to ./week2/data_github
   
 # cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1)
 @task(name="write_gcs", log_prints=True, tags="load_gcs", retries=3)
 def write_gcs(filepath: str):
   gcp_cloud_storage_bucket_block = GcsBucket.load("taxi-gcp")
-  path_uploaded_to = gcp_cloud_storage_bucket_block.upload_from_path(from_path=f"./week2/data/{filepath}.parquet", to_path=filepath)
+  path_uploaded_to = gcp_cloud_storage_bucket_block.upload_from_path(from_path=f"./week2/data_github/{filepath}.parquet", to_path=filepath)
   print(f"Uploaded to {path_uploaded_to}")
   
 @flow(name="etl_large", log_prints=True)
