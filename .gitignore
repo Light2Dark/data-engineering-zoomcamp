@@ -12,3 +12,7 @@ target/
 dbt_packages/
 logs/
 # end dbt Cloud content
+
+
+# do not ignore these files:
+!taxi_zone_lookup.csv
