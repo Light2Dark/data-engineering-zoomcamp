@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: staging
+    database: data-eng-first
+    schema: taxi_data_sg 
+
+    tables:
+      - name: yellow
+      - name: green
