@@ -18,12 +18,12 @@ def etl_gcs_to_bq(month: int, colour: str, year: int):
   """Main flow to upload data from GCS to BigQuery"""
   path = extract_from_gcs(colour, year, month)
   df = transform_from_gcs(path)
-  load_to_bq(df, f"taxi_data.{colour}")
+  load_to_bq(df, f"taxi_data_sg.{colour}")
   
 @task(name="extract_from_gcs", retries=3, log_prints=True, tags="extract_gcs")
 def extract_from_gcs(colour: str, year: int, month: int) -> str:
   """Download trip data from GCS bucket to local machine, returns path where file is saved"""
-  gcs_path = f"{colour}_tripdata_{year}-{month:02d}.parquet"
+  gcs_path = f"{colour}_tripdata_{year}-{month:02d}"
   gcs_block: GcsBucket = GcsBucket.load("taxi-gcp")
     
   save_path = f"./week2/data/{gcs_path}"
@@ -61,5 +61,5 @@ def etl_gcs_to_bq_large():
     print("Dataset rows:", parquet_file.metadata.num_rows)
 
 if __name__ == "__main__":
-  etl_parent_flow(months=[2,3], colour="yellow", year=2019)
+  etl_parent_flow(months=[3], colour="yellow", year=2019)
   # etl_gcs_to_bq_large()
