@@ -1,0 +1,60 @@
+{
+    "reference": {
+      "jobId": "job-edd0ea18",
+      "projectId": "data-eng-first"
+    },
+    "placement": {
+      "clusterName": "de-zoomcamp-cluster"
+    },
+    "status": {
+      "state": "DONE",
+      "stateStartTime": "2023-03-06T05:51:00.110731Z"
+    },
+    "yarnApplications": [
+      {
+        "name": "test",
+        "state": "FINISHED",
+        "progress": 1,
+        "trackingUrl": "http://de-zoomcamp-cluster-m:8088/proxy/application_1678081161371_0001/"
+      }
+    ],
+    "statusHistory": [
+      {
+        "state": "PENDING",
+        "stateStartTime": "2023-03-06T05:50:04.832341Z"
+      },
+      {
+        "state": "SETUP_DONE",
+        "stateStartTime": "2023-03-06T05:50:04.879611Z"
+      },
+      {
+        "state": "RUNNING",
+        "details": "Agent reported job success",
+        "stateStartTime": "2023-03-06T05:50:05.184549Z"
+      }
+    ],
+    "driverControlFilesUri": "gs://dataproc-staging-asia-southeast1-1082448671503-hzdstazt/google-cloud-dataproc-metainfo/cd50d088-9a6c-42c3-b9a8-336ea0f7a448/jobs/job-edd0ea18/",
+    "driverOutputResourceUri": "gs://dataproc-staging-asia-southeast1-1082448671503-hzdstazt/google-cloud-dataproc-metainfo/cd50d088-9a6c-42c3-b9a8-336ea0f7a448/jobs/job-edd0ea18/driveroutput",
+    "jobUuid": "623f3991-42c4-4137-b116-940fda199759",
+    "done": true,
+    "pysparkJob": {
+      "mainPythonFileUri": "gs://taxi-data-dataeng/code/spark_dataproc.py",
+      "args": [
+        "--input_green=gs://taxi-data-dataeng/spark/pq/green/2021/*",
+        "--input_yellow=gs://taxi-data-dataeng/spark/pq/yellow/2021/*",
+        "--output=gs://taxi-data-dataeng/spark/report/revenue-2021"
+      ]
+    }
+  }
+
+// Dataproc gcloud sdk command
+gcloud dataproc jobs submit pyspark \
+  --cluster=de-zoomcamp-cluster \
+  --jars=gs://spark-lib/bigquery/spark-bigquery-with-dependencies_2.12-0.23.2.jar \
+  --region=asia-southeast1 \
+  gs://taxi-data-dataeng/code/spark_dataproc_bq.py \
+  -- \
+    --input_green=gs://taxi-data-dataeng/spark/pq/green/2020/* \
+    --input_yellow=gs://taxi-data-dataeng/spark/pq/yellow/2020/*  \
+    --output=data-eng-first.taxi_data_sg.revenue-2021
+

@@ -10,3 +10,10 @@ spark-submit \
         --input_green data/pq/green/2021/* \
         --input_yellow data/pq/yellow/2021/*  \
         --output data/report/revenue-2021
+
+
+# dataproc
+python spark_gcloud_local.py \
+    --input_green=gs://taxi-data-dataeng/spark/pq/green/2021/* \
+    --input_yellow=gs://taxi-data-dataeng/spark/pq/yellow/2021/*  \
+    --output=gs://taxi-data-dataeng/spark/report/revenue-2021
